@@ -1,8 +1,8 @@
-import { useAuth } from '../../contexts/AuthContext';
-import { useOnlineStatus } from '../../hooks/useOnlineStatus';
+import { useAuth } from '../contexts/AuthContext';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { Bell, Menu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { SHOP_INFO } from '../../utils/constants';
+import { SHOP_INFO } from '../utils/constants';
 
 export default function TopBar({ onMenuClick, sidebarCollapsed }) {
   const { user, userData } = useAuth();
@@ -28,9 +28,11 @@ export default function TopBar({ onMenuClick, sidebarCollapsed }) {
 
       {/* Mobile logo */}
       <div className="lg:hidden flex items-center gap-2">
-        <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-xs">
-          MM
-        </div>
+        <img
+          src="/applogo.png"
+          alt={SHOP_INFO.name}
+          className="w-8 h-8 rounded-lg object-cover"
+        />
         <span className="font-semibold text-slate-900 text-sm">{SHOP_INFO.name}</span>
       </div>
 

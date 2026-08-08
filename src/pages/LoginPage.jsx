@@ -39,9 +39,11 @@ export default function LoginPage() {
         <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 space-y-8">
           {/* Logo */}
           <div className="text-center space-y-3">
-            <div className="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-2xl font-bold mx-auto shadow-lg shadow-indigo-200">
-              MM
-            </div>
+            <img
+              src="/applogo.png"
+              alt={SHOP_INFO.name}
+              className="w-20 h-20 rounded-2xl object-cover mx-auto shadow-lg"
+            />
             <div>
               <h1 className="text-xl font-bold text-slate-900">{SHOP_INFO.name}</h1>
               <p className="text-sm text-slate-500 mt-1">{SHOP_INFO.tagline}</p>

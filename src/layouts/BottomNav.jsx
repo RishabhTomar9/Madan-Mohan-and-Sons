@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { MOBILE_NAV_STAFF, MOBILE_NAV_CUSTOMER } from '../../utils/constants';
+import { useAuth } from '../contexts/AuthContext';
+import { MOBILE_NAV_STAFF, MOBILE_NAV_CUSTOMER } from '../utils/constants';
 import * as LucideIcons from 'lucide-react';
 
 export default function BottomNav({ onMoreClick }) {

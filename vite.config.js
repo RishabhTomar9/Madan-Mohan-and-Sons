@@ -10,22 +10,29 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['applogo.png'],
       manifest: {
         name: 'Madhan Mohan and Sons',
         short_name: 'MMS',
-        description: 'Madhan Mohan and Sons Web App',
-        theme_color: '#ffffff',
+        description: 'Madhan Mohan and Sons — Billing, KhataBook & E-commerce',
+        theme_color: '#4f46e5',
+        background_color: '#ffffff',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'applogo.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'applogo.png',
             sizes: '512x512',
             type: 'image/png'
+          },
+          {
+            src: 'applogo.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }

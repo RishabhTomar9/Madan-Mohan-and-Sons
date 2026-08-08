@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { NAV_ITEMS, SHOP_INFO } from '../../utils/constants';
+import { useAuth } from '../contexts/AuthContext';
+import { NAV_ITEMS, SHOP_INFO } from '../utils/constants';
 import { LogOut, ChevronLeft } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
@@ -26,9 +26,11 @@ export default function Sidebar({ collapsed, onToggle }) {
     `}>
       {/* Logo */}
       <div className="h-16 flex items-center gap-3 px-4 border-b border-slate-100 shrink-0">
-        <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
-          MM
-        </div>
+        <img
+          src="/applogo.png"
+          alt={SHOP_INFO.name}
+          className="w-9 h-9 rounded-xl object-cover shrink-0"
+        />
         {!collapsed && (
           <div className="min-w-0">
             <h1 className="font-bold text-slate-900 text-sm truncate">{SHOP_INFO.name}</h1>
