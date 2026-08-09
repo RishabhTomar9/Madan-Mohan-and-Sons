@@ -4,8 +4,12 @@ import { MOBILE_NAV_STAFF, MOBILE_NAV_CUSTOMER } from '../utils/constants';
 import * as LucideIcons from 'lucide-react';
 
 export default function BottomNav({ onMoreClick }) {
-  const { isStaff } = useAuth();
-  const navItems = isStaff() ? MOBILE_NAV_STAFF : MOBILE_NAV_CUSTOMER;
+  const { isStaff, hasPermission } = useAuth();
+  let navItems = isStaff() ? MOBILE_NAV_STAFF : MOBILE_NAV_CUSTOMER;
+  
+  if (isStaff()) {
+    navItems = navItems.filter(item => !item.permission || hasPermission(item.permission));
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-30 lg:hidden safe-bottom">

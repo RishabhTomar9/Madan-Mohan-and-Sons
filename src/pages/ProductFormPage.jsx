@@ -116,7 +116,8 @@ export default function ProductFormPage() {
       
       // Upload new image if selected
       if (imageFile) {
-        finalImageUrl = await uploadImage(imageFile, 'products');
+        const uploadResult = await uploadImage(imageFile, 'products');
+        finalImageUrl = uploadResult.url;
       }
 
       const productData = { ...formData, imageUrl: finalImageUrl };

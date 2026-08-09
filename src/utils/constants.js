@@ -53,9 +53,9 @@ export const NAV_ITEMS = {
 
 // Mobile bottom nav items (subset)
 export const MOBILE_NAV_STAFF = [
-  { label: 'Home', icon: 'LayoutDashboard', path: '/dashboard' },
-  { label: 'Bill', icon: 'Calculator', path: '/billing' },
-  { label: 'Khata', icon: 'BookOpen', path: '/khatabook' },
+  { label: 'Home', icon: 'LayoutDashboard', path: '/dashboard', permission: 'dashboard' },
+  { label: 'Bill', icon: 'Calculator', path: '/billing', permission: 'billing' },
+  { label: 'Khata', icon: 'BookOpen', path: '/khatabook', permission: 'khatabook' },
   { label: 'More', icon: 'Menu', path: null }, // opens drawer
 ];
 

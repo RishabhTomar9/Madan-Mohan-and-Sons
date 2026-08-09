@@ -62,13 +62,21 @@ export function AuthProvider({ children }) {
 
   const hasPermission = (permission) => {
     if (!userData?.role) return false;
+    
+    // If user has custom permissions, check those instead of role-based defaults
+    if (userData.customPermissions && Array.isArray(userData.customPermissions)) {
+      return userData.customPermissions.includes(permission);
+    }
+    
+    // Fallback to role-based permissions
     const permissions = ROLE_PERMISSIONS[userData.role] || [];
     return permissions.includes(permission);
   };
 
   const isStaff = () => {
     if (!userData?.role) return false;
-    return ['owner', 'manager', 'cashier'].includes(userData.role);
+    // Anyone with a staff role, OR a customer who was given custom permissions (e.g., made an admin)
+    return ['owner', 'manager', 'cashier'].includes(userData.role) || (userData.customPermissions && userData.customPermissions.length > 0);
   };
 
   const value = {

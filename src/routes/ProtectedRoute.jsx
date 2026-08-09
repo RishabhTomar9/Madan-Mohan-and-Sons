@@ -13,7 +13,7 @@ import { FullPageSpinner } from '../components/ui/Spinner';
  * @param {boolean} [props.staffOnly] - If true, only staff roles can access
  */
 export default function ProtectedRoute({ children, permission, roles, staffOnly = false }) {
-  const { user, userData, loading, error } = useAuth();
+  const { user, userData, loading, error, isStaff, hasPermission } = useAuth();
 
   if (loading) {
     return <FullPageSpinner />;
@@ -51,7 +51,7 @@ export default function ProtectedRoute({ children, permission, roles, staffOnly 
   }
 
   // Check staff-only
-  if (staffOnly && !['owner', 'manager', 'cashier'].includes(userData.role)) {
+  if (staffOnly && !isStaff()) {
     return <Navigate to="/store" replace />;
   }
 
@@ -61,11 +61,8 @@ export default function ProtectedRoute({ children, permission, roles, staffOnly 
   }
 
   // Check permission
-  if (permission) {
-    const userPermissions = ROLE_PERMISSIONS[userData.role] || [];
-    if (!userPermissions.includes(permission)) {
-      return <Navigate to="/dashboard" replace />;
-    }
+  if (permission && !hasPermission(permission)) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;
