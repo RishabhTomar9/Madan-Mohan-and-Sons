@@ -28,12 +28,13 @@ service cloud.firestore {
     }
     
     match /users/{userId} {
-      allow read: if isStaff() || request.auth.uid == userId;
+      allow read: if isStaff() || request.auth.uid == userId || resource.data.role == 'owner';
       allow write: if isOwner() || request.auth.uid == userId;
     }
     
     match /customers/{docId} {
-      allow read, write: if isStaff();
+      allow read: if isStaff();
+      allow write: if isStaff() || isAuthenticated();
     }
     
     match /products/{docId} {

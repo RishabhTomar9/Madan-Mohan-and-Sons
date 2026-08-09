@@ -17,9 +17,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['applogo.png'],
       manifest: {
-        name: 'Madhan Mohan and Sons',
+        name: 'Madan Mohan and Sons',
         short_name: 'MMS',
-        description: 'Madhan Mohan and Sons — Billing, KhataBook & E-commerce',
+        description: 'Madan Mohan and Sons — Billing, KhataBook & E-commerce',
         theme_color: '#4f46e5',
         background_color: '#ffffff',
         icons: [

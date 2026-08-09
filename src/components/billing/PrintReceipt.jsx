@@ -4,7 +4,7 @@ import { formatDateTime } from '../../utils/date';
 export default function PrintReceipt({ invoice, storeSettings }) {
   if (!invoice) return null;
 
-  const shopName = storeSettings ? storeSettings.name : 'MADHAN MOHAN & SONS';
+  const shopName = storeSettings ? storeSettings.name : 'Madan MOHAN & SONS';
   const shopAddress = storeSettings ? storeSettings.address : 'Main Market, Delhi 110001';
   const shopPhone = storeSettings ? storeSettings.phone : '+91 98765 43210';
   const shopGstin = storeSettings ? storeSettings.gstin : '07AABCU9603R1ZM';
@@ -12,7 +12,7 @@ export default function PrintReceipt({ invoice, storeSettings }) {
 
   return (
     <div className="bg-white text-slate-900 font-sans p-6 sm:p-8 max-w-3xl mx-auto print:p-8 print:max-w-none print:w-full print:bg-white">
-      
+
       {/* ----------------- BRANDING HEADER ----------------- */}
       <div className="mb-8 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
@@ -28,7 +28,7 @@ export default function PrintReceipt({ invoice, storeSettings }) {
             </p>
           )}
         </div>
-        
+
         {logoUrl && (
           <div className="shrink-0 flex items-start print:items-end">
             <img src={logoUrl} alt={shopName} className="h-16 w-auto object-contain" />
@@ -52,7 +52,7 @@ export default function PrintReceipt({ invoice, storeSettings }) {
             <span className="capitalize">{invoice.paymentMethod}</span>
           </p>
           <p>
-            <span className="text-slate-500 mr-1">Bill to:</span> 
+            <span className="text-slate-500 mr-1">Bill to:</span>
             <span className="font-medium">{invoice.customer?.name || 'Walk-in'}</span>
             {invoice.customer && (invoice.customer.normalizedMobile || invoice.customer.phone) && (
               <span className="ml-1 text-slate-500">({(invoice.customer.normalizedMobile && invoice.customer.normalizedMobile !== '+') ? invoice.customer.normalizedMobile : invoice.customer.phone})</span>
@@ -115,21 +115,21 @@ export default function PrintReceipt({ invoice, storeSettings }) {
             );
           })}
         </div>
-        
+
         <div className="p-4 bg-slate-50 flex justify-between items-center border-t border-slate-200">
           <span className="font-extrabold text-slate-900 uppercase tracking-widest text-sm">GRAND TOTAL</span>
           <span className="text-2xl font-bold text-indigo-600 tracking-tight">{formatCurrency(invoice.grandTotal)}</span>
         </div>
       </div>
-      
+
       {/* ----------------- FOOTER & QR ----------------- */}
       <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-6 print:flex hidden">
         {/* QR Code */}
         {storeSettings?.upiId ? (
           <div className="flex flex-col items-center justify-center p-3 border border-slate-200 rounded-xl bg-white shadow-sm">
-            <img 
+            <img
               src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(`upi://pay?pa=${storeSettings.upiId}&pn=${encodeURIComponent(shopName)}&am=${invoice.grandTotal}&cu=INR`)}`}
-              alt="Scan to Pay" 
+              alt="Scan to Pay"
               className="w-20 h-20 mb-2"
               crossOrigin="anonymous"
             />

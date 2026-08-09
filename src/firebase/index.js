@@ -1,2 +1,2 @@
 export { auth, db, googleProvider } from './config';
-export { signInWithGoogle, signOutUser, getUserData, updateUserRole } from './auth';
+export { signInWithGoogle, signOutUser, getUserData, updateUserRole, handleRedirectResult } from './auth';

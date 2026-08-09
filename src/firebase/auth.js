@@ -1,46 +1,62 @@
-import { signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, getRedirectResult, signOut as firebaseSignOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, googleProvider, db } from './config';
 
 const SUPER_ADMIN_EMAIL = import.meta.env.VITE_SUPER_ADMIN_EMAIL;
 
-/**
- * Sign in with Google popup.
- * Creates/updates user doc in Firestore.
- * Super admin gets 'owner' role automatically.
- * New users get 'customer' role.
- */
+async function processUserDoc(user) {
+  const userRef = doc(db, 'users', user.uid);
+  const userSnap = await getDoc(userRef);
+
+  if (!userSnap.exists()) {
+    const role = user.email === SUPER_ADMIN_EMAIL ? 'owner' : 'customer';
+    await setDoc(userRef, {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+      role,
+      isActive: true,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    return { user, role, isNewUser: true };
+  }
+
+  const userData = userSnap.data();
+  await setDoc(userRef, { updatedAt: serverTimestamp() }, { merge: true });
+  return { user, role: userData.role, isNewUser: false };
+}
+
+export async function handleRedirectResult() {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result && result.user) {
+      await processUserDoc(result.user);
+    }
+  } catch (error) {
+    console.error('Redirect sign-in error:', error);
+    throw new Error('Authentication failed after redirect. Please try again.');
+  }
+}
+
 export async function signInWithGoogle() {
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  
+  if (isMobile) {
+    try {
+      await signInWithRedirect(auth, googleProvider);
+      return null; // Page will redirect, execution stops
+    } catch (error) {
+      console.error('Failed to trigger redirect login:', error);
+      throw new Error('Failed to start mobile login. Please check your browser settings.');
+    }
+  }
+
+  // Desktop flow (Popup)
   try {
     const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-
-    const userRef = doc(db, 'users', user.uid);
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-      // New user — determine role
-      const role = user.email === SUPER_ADMIN_EMAIL ? 'owner' : 'customer';
-
-      await setDoc(userRef, {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-        role,
-        isActive: true,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-
-      return { user, role, isNewUser: true };
-    }
-
-    // Existing user — update last login
-    const userData = userSnap.data();
-    await setDoc(userRef, { updatedAt: serverTimestamp() }, { merge: true });
-
-    return { user, role: userData.role, isNewUser: false };
+    return await processUserDoc(result.user);
   } catch (error) {
     if (error.code === 'auth/popup-closed-by-user') {
       throw new Error('Sign-in popup was closed. Please try again.');
@@ -52,8 +68,9 @@ export async function signInWithGoogle() {
       throw new Error('Network error. Please check your connection and try again.');
     }
     if (error.code === 'auth/cancelled-popup-request') {
-      return null; // silently ignore — happens when user clicks login button multiple times
+      return null;
     }
+    console.error('Popup sign-in error:', error);
     throw new Error('Authentication failed. Please try again.');
   }
 }

@@ -127,6 +127,57 @@ export default function SettingsPage() {
 
       {/* User Management Section (Owner Only) */}
       {userData?.role === 'owner' && <UserManagementSection />}
+
+      {/* Database Tools (Owner Only) */}
+      {userData?.role === 'owner' && <DatabaseToolsSection />}
+    </div>
+  );
+}
+
+// ---------- Database Tools Section ----------
+
+import { seedDatabase } from '../utils/seedData';
+import { Database, AlertTriangle } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+function DatabaseToolsSection() {
+  const [seeding, setSeeding] = useState(false);
+
+  const handleSeed = async () => {
+    if (!window.confirm('Are you sure you want to seed the database? This will add 200 dummy products and 20 categories.')) {
+      return;
+    }
+    setSeeding(true);
+    const loadingToast = toast.loading('Seeding database... This might take a moment.');
+    try {
+      await seedDatabase();
+      toast.success('Database seeded successfully!', { id: loadingToast });
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to seed database.', { id: loadingToast });
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-red-200 p-6 shadow-sm">
+      <div className="flex items-center gap-2 mb-4">
+        <Database size={20} className="text-red-500" />
+        <h2 className="font-semibold text-slate-900">Database Tools (Developer)</h2>
+      </div>
+      <div className="p-4 bg-red-50 rounded-xl border border-red-100 flex flex-col sm:flex-row items-center gap-4 justify-between">
+        <div className="flex items-start gap-3">
+          <AlertTriangle size={24} className="text-red-500 shrink-0 mt-0.5" />
+          <div>
+            <h3 className="font-bold text-red-900">Seed Catalog</h3>
+            <p className="text-sm text-red-700 mt-1">Injects 20 categories and 200 dummy products into the live database. Use with caution.</p>
+          </div>
+        </div>
+        <Button variant="danger" onClick={handleSeed} loading={seeding} className="shrink-0 w-full sm:w-auto">
+          Trigger Seed
+        </Button>
+      </div>
     </div>
   );
 }
@@ -202,21 +253,21 @@ function UserManagementSection() {
       ) : (
         <div className="space-y-3">
           {users.map(u => (
-            <div key={u.id} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors">
-              <div className="flex items-center gap-3">
+            <div key={u.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
                 {u.photoURL ? (
-                  <img src={u.photoURL} alt="" className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
+                  <img src={u.photoURL} alt="" className="w-10 h-10 rounded-full shrink-0" referrerPolicy="no-referrer" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 shrink-0">
                     {u.displayName?.[0] || 'U'}
                   </div>
                 )}
-                <div>
-                  <p className="font-medium text-slate-900 leading-tight">{u.displayName}</p>
-                  <p className="text-xs text-slate-500">{u.email}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-slate-900 leading-tight truncate">{u.displayName}</p>
+                  <p className="text-xs text-slate-500 truncate">{u.email}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
                 <Badge variant={u.role === 'owner' ? 'success' : u.role === 'customer' ? 'default' : 'info'}>
                   {u.role}
                 </Badge>
@@ -225,8 +276,8 @@ function UserManagementSection() {
                 )}
                 <button 
                   onClick={() => handleEdit(u)}
-                  disabled={u.role === 'owner'} // Prevent editing other owners easily
-                  className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-50"
+                  disabled={u.role === 'owner'} 
+                  className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-50 ml-1"
                   title="Manage Access"
                 >
                   <UserCog size={18} />

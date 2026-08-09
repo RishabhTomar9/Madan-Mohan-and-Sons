@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 
-export default function SEO({ title, description = 'Madhan Mohan and Sons - Your Trusted Retail Partner' }) {
+export default function SEO({ title, description = 'Madan Mohan and Sons - Your Trusted Retail Partner' }) {
   useEffect(() => {
-    document.title = title ? `${title} | MMS` : 'Madhan Mohan and Sons';
-    
+    document.title = title ? `${title} | MMS` : 'Madan Mohan and Sons';
+
     let metaDesc = document.querySelector('meta[name="description"]');
     if (!metaDesc) {
       metaDesc = document.createElement('meta');

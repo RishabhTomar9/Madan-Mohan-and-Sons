@@ -36,15 +36,15 @@ export default function OrderDetailPage() {
     try {
       await updateOrderStatus(id, newStatus);
       setOrder(prev => ({ ...prev, status: newStatus }));
-      
+
       // Notify customer via WhatsApp if they have a phone
       if (order.customerPhone) {
         let msg = '';
-        if (newStatus === 'accepted') msg = `Hello ${order.customerName}, your order #${order.orderNumber} has been accepted and is being prepared by Madhan Mohan & Sons.`;
+        if (newStatus === 'accepted') msg = `Hello ${order.customerName}, your order #${order.orderNumber} has been accepted and is being prepared by Madan Mohan & Sons.`;
         if (newStatus === 'dispatched') msg = `Hello ${order.customerName}, your order #${order.orderNumber} has been dispatched. It will reach you soon.`;
-        if (newStatus === 'delivered') msg = `Hello ${order.customerName}, your order #${order.orderNumber} has been delivered. Thank you for shopping with Madhan Mohan & Sons!`;
+        if (newStatus === 'delivered') msg = `Hello ${order.customerName}, your order #${order.orderNumber} has been delivered. Thank you for shopping with Madan Mohan & Sons!`;
         if (newStatus === 'cancelled') msg = `Hello ${order.customerName}, your order #${order.orderNumber} has been cancelled. If you have any questions, please contact us.`;
-        
+
         if (msg) shareViaWhatsApp(order.customerPhone, msg);
       }
     } catch (err) {
@@ -60,7 +60,7 @@ export default function OrderDetailPage() {
       navigate(`/invoices/${order.invoiceId}`);
       return;
     }
-    
+
     setUpdating(true);
     try {
       const invoice = await createInvoice({
@@ -77,7 +77,7 @@ export default function OrderDetailPage() {
         },
         linkedOrderId: order.id,
       });
-      
+
       // Save the invoiceId to the order
       // We don't have an explicit function for updating just invoiceId, but updateOrderStatus works if modified, or we can just navigate
       navigate(`/invoices/${invoice.id}`);
@@ -104,9 +104,9 @@ export default function OrderDetailPage() {
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold text-slate-900">Order #{order.orderNumber}</h1>
               <Badge variant={
-                order.status === 'delivered' ? 'success' : 
-                order.status === 'cancelled' ? 'danger' : 
-                order.status === 'pending' ? 'warning' : 'info'
+                order.status === 'delivered' ? 'success' :
+                  order.status === 'cancelled' ? 'danger' :
+                    order.status === 'pending' ? 'warning' : 'info'
               }>
                 {order.status.toUpperCase()}
               </Badge>
@@ -190,13 +190,13 @@ export default function OrderDetailPage() {
             </Button>
           </>
         )}
-        
+
         {order.status === 'accepted' && (
           <Button variant="primary" onClick={() => handleStatusChange('dispatched')} loading={updating}>
             Mark Dispatched
           </Button>
         )}
-        
+
         {order.status === 'dispatched' && (
           <Button variant="success" onClick={() => handleStatusChange('delivered')} loading={updating}>
             Mark Delivered

@@ -16,11 +16,11 @@ export default function KhataCustomerPage() {
   const { customerId } = useParams();
   const navigate = useNavigate();
   const { user, userData } = useAuth();
-  
+
   const [customer, setCustomer] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Modal state
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [transactionType, setTransactionType] = useState('give'); // 'give' or 'take'
@@ -53,13 +53,13 @@ export default function KhataCustomerPage() {
     setSubmitting(true);
     try {
       const createdBy = { uid: user.uid, name: userData?.displayName || 'Staff' };
-      
+
       await addKhataTransaction(customerId, {
         amount: numAmount,
         type: transactionType,
         description
       }, createdBy);
-      
+
       // Refresh
       const [customerData, txData] = await Promise.all([
         getCustomer(customerId),
@@ -67,7 +67,7 @@ export default function KhataCustomerPage() {
       ]);
       setCustomer(customerData);
       setTransactions(txData);
-      
+
       setShowTransactionModal(false);
       setAmount('');
       setDescription('');
@@ -84,14 +84,14 @@ export default function KhataCustomerPage() {
       alert('Customer does not have a phone number saved.');
       return;
     }
-    
+
     let text = '';
     if (customer.khataBalance > 0) {
-      text = `Dear ${customer.name}, your pending balance at Madhan Mohan & Sons is ${formatCurrency(customer.khataBalance)}. Please arrange for payment. Thank you!`;
+      text = `Dear ${customer.name}, your pending balance at Madan Mohan & Sons is ${formatCurrency(customer.khataBalance)}. Please arrange for payment. Thank you!`;
     } else {
-      text = `Dear ${customer.name}, you have an advance balance of ${formatCurrency(Math.abs(customer.khataBalance))} at Madhan Mohan & Sons.`;
+      text = `Dear ${customer.name}, you have an advance balance of ${formatCurrency(Math.abs(customer.khataBalance))} at Madan Mohan & Sons.`;
     }
-    
+
     shareViaWhatsApp(customer.phone, text);
   };
 
@@ -127,13 +127,12 @@ export default function KhataCustomerPage() {
             )}
           </div>
         </div>
-        
+
         {/* Balance Card */}
-        <div className={`mt-4 p-4 rounded-xl flex items-center justify-between ${
-          customer.khataBalance > 0 ? 'bg-red-50 text-red-900' :
-          customer.khataBalance < 0 ? 'bg-emerald-50 text-emerald-900' :
-          'bg-slate-50 text-slate-900'
-        }`}>
+        <div className={`mt-4 p-4 rounded-xl flex items-center justify-between ${customer.khataBalance > 0 ? 'bg-red-50 text-red-900' :
+            customer.khataBalance < 0 ? 'bg-emerald-50 text-emerald-900' :
+              'bg-slate-50 text-slate-900'
+          }`}>
           <div>
             <p className="text-sm font-medium opacity-80">Net Balance</p>
             <p className="text-2xl font-bold mt-1">
@@ -143,8 +142,8 @@ export default function KhataCustomerPage() {
           <div className="text-right">
             <p className="text-sm font-bold">
               {customer.khataBalance > 0 ? 'You will receive' :
-               customer.khataBalance < 0 ? 'You will pay' :
-               'Settled'}
+                customer.khataBalance < 0 ? 'You will pay' :
+                  'Settled'}
             </p>
           </div>
         </div>
@@ -155,7 +154,7 @@ export default function KhataCustomerPage() {
         <div className="p-4 border-b border-slate-100 sticky top-0 bg-white/80 backdrop-blur-md">
           <h2 className="font-semibold text-slate-900">Ledger Details</h2>
         </div>
-        
+
         {transactions.length === 0 ? (
           <div className="p-8 text-center text-slate-500 text-sm">
             No transactions yet. Add a transaction below.
@@ -201,17 +200,17 @@ export default function KhataCustomerPage() {
 
       {/* Action Buttons */}
       <div className="grid grid-cols-2 gap-3 shrink-0 pb-2">
-        <Button 
-          variant="danger" 
-          size="lg" 
+        <Button
+          variant="danger"
+          size="lg"
           className="!rounded-2xl shadow-sm"
           onClick={() => { setTransactionType('give'); setShowTransactionModal(true); }}
         >
           You Gave ₹ (Red)
         </Button>
-        <Button 
-          variant="success" 
-          size="lg" 
+        <Button
+          variant="success"
+          size="lg"
           className="!rounded-2xl shadow-sm"
           onClick={() => { setTransactionType('take'); setShowTransactionModal(true); }}
         >
@@ -220,8 +219,8 @@ export default function KhataCustomerPage() {
       </div>
 
       {/* Transaction Modal */}
-      <Modal 
-        isOpen={showTransactionModal} 
+      <Modal
+        isOpen={showTransactionModal}
         onClose={() => setShowTransactionModal(false)}
         title={transactionType === 'give' ? 'You Gave' : 'You Got'}
         size="sm"
@@ -240,15 +239,15 @@ export default function KhataCustomerPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Description / Bill details</label>
-            <Input 
+            <Input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="e.g. advance payment, goods on credit"
             />
           </div>
-          <Button 
-            fullWidth 
-            onClick={handleTransaction} 
+          <Button
+            fullWidth
+            onClick={handleTransaction}
             loading={submitting}
             disabled={!amount || parseFloat(amount) <= 0}
             variant={transactionType === 'give' ? 'danger' : 'success'}

@@ -8,7 +8,8 @@ import { INVOICE_PREFIX } from '../utils/constants';
 const ORDERS_COL = 'orders';
 
 import { addNotification } from './notificationService';
-import { getAllUsers } from './userService';
+import { getOwners } from './userService';
+import { checkDuplicateCustomer, quickCreateCustomer } from './customerService';
 
 /**
  * Place a new customer order.
@@ -16,20 +17,37 @@ import { getAllUsers } from './userService';
 export async function createOrder(data) {
   const orderData = {
     ...data,
-    status: 'pending', // pending, accepted, dispatched, delivered, cancelled
+    status: 'pending',
     orderNumber: `ORD-${Date.now().toString().slice(-6)}`,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
 
   const docRef = await addDoc(collection(db, ORDERS_COL), orderData);
+
+  // Sync to POS Customer Database
+  try {
+    if (data.customerPhone) {
+      const existingCustomer = await checkDuplicateCustomer(data.customerPhone, data.customerId);
+      if (!existingCustomer) {
+        await quickCreateCustomer(
+          data.customerName || 'Online Customer',
+          data.customerPhone,
+          data.shippingAddress?.address || '',
+          data.shippingAddress?.city || '',
+          data.customerId
+        );
+      }
+    }
+  } catch (err) {
+    console.error('Failed to sync customer to POS:', err);
+  }
   
   // Notify owners
   try {
-    const users = await getAllUsers();
-    const owners = users.filter(u => u.role === 'owner');
+    const owners = await getOwners();
     for (const owner of owners) {
-      await addNotification(owner.id, 'New Order Received', `Order ${orderData.orderNumber} placed for ₹${orderData.totalAmount}`, 'info');
+      await addNotification(owner.id, 'New Order Received', `Order ${orderData.orderNumber} placed for ₹${orderData.totalAmount || orderData.grandTotal}`, 'info');
     }
   } catch (err) {
     console.error('Failed to notify owners:', err);

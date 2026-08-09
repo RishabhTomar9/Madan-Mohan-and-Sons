@@ -7,7 +7,10 @@ const CART_STORAGE_KEY = 'mms_cart';
 function loadCart() {
   try {
     const saved = localStorage.getItem(CART_STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    // Filter out invalid items (like those saved with undefined price due to the previous bug)
+    return parsed.filter(item => item && item.productId && typeof item.price === 'number' && !isNaN(item.price));
   } catch {
     return [];
   }
@@ -30,19 +33,22 @@ export function CartProvider({ children }) {
 
   const addItem = (product, quantity = 1) => {
     setItems((prev) => {
-      const existing = prev.find((item) => item.productId === product.id);
+      const pId = product.productId || product.id;
+      const existing = prev.find((item) => item.productId === pId);
+      
       if (existing) {
         return prev.map((item) =>
-          item.productId === product.id
+          item.productId === pId
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
+      
       return [...prev, {
-        productId: product.id,
+        productId: pId,
         name: product.name,
-        price: product.sellingPrice,
-        image: product.images?.[0] || null,
+        price: product.price || product.sellingPrice,
+        imageUrl: product.imageUrl || (product.images ? product.images[0] : null) || product.image,
         quantity,
         maxStock: product.stock,
       }];

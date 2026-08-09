@@ -26,6 +26,8 @@ const StorePage = lazy(() => import('../pages/StorePage'));
 const StoreProductPage = lazy(() => import('../pages/StoreProductPage'));
 const CartPage = lazy(() => import('../pages/CartPage'));
 const CheckoutPage = lazy(() => import('../pages/CheckoutPage'));
+const StoreOrdersPage = lazy(() => import('../pages/StoreOrdersPage'));
+const StoreOrderDetailPage = lazy(() => import('../pages/StoreOrderDetailPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 
 function SuspenseWrapper({ children }) {
@@ -137,6 +139,16 @@ export default function AppRoutes() {
       <Route path="/store/checkout" element={
         <ProtectedRoute>
           <SuspenseWrapper><CheckoutPage /></SuspenseWrapper>
+        </ProtectedRoute>
+      } />
+      <Route path="/store/orders" element={
+        <ProtectedRoute>
+          <SuspenseWrapper><StoreOrdersPage /></SuspenseWrapper>
+        </ProtectedRoute>
+      } />
+      <Route path="/store/orders/:id" element={
+        <ProtectedRoute>
+          <SuspenseWrapper><StoreOrderDetailPage /></SuspenseWrapper>
         </ProtectedRoute>
       } />
 

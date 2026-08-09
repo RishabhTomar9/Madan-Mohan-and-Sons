@@ -12,9 +12,9 @@ export async function getStoreSettings() {
   } catch (err) {
     console.error('Failed to get store settings:', err);
   }
-  
+
   return {
-    name: 'MADHAN MOHAN & SONS',
+    name: 'Madan MOHAN & SONS',
     address: 'Main Market, Delhi 110001',
     phone: '+91 98765 43210',
     gstin: '07AABCU9603R1ZM',

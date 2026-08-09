@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth, signInWithGoogle, signOutUser, getUserData } from '../firebase';
+import { auth, signInWithGoogle, signOutUser, getUserData, handleRedirectResult } from '../firebase';
 import { ROLE_PERMISSIONS } from '../utils/constants';
 
 const AuthContext = createContext(null);
@@ -12,27 +12,47 @@ export function AuthProvider({ children }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        try {
-          const data = await getUserData(firebaseUser.uid);
-          setUser(firebaseUser);
-          setUserData(data);
-        } catch (err) {
-          console.error('Error fetching user data:', err);
-          setUser(firebaseUser);
-          setUserData(null);
-          setError('Failed to connect to database. Please check your internet or Firebase configuration.');
-        }
-      } else {
-        setUser(null);
-        setUserData(null);
-        setError(null);
+    let mounted = true;
+
+    const initAuth = async () => {
+      try {
+        await handleRedirectResult();
+      } catch (err) {
+        if (mounted) setError(err.message);
       }
-      setLoading(false);
+
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        if (firebaseUser) {
+          try {
+            const data = await getUserData(firebaseUser.uid);
+            setUser(firebaseUser);
+            setUserData(data);
+          } catch (err) {
+            console.error('Error fetching user data:', err);
+            setUser(firebaseUser);
+            setUserData(null);
+            setError('Failed to connect to database. Please check your internet or Firebase configuration.');
+          }
+        } else {
+          setUser(null);
+          setUserData(null);
+          setError(null);
+        }
+        setLoading(false);
+      });
+
+      return unsubscribe;
+    };
+
+    let cleanup;
+    initAuth().then(unsub => {
+      cleanup = unsub;
     });
 
-    return () => unsubscribe();
+    return () => {
+      mounted = false;
+      if (cleanup) cleanup();
+    };
   }, []);
 
   const login = async () => {

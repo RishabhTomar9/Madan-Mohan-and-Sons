@@ -98,6 +98,6 @@ export const KHATA_TYPES = ['CREDIT', 'DEBIT', 'PAYMENT', 'ADJUSTMENT'];
 
 // Shop default info
 export const SHOP_INFO = {
-  name: 'Madhan Mohan & Sons',
+  name: 'Madan Mohan & Sons',
   tagline: 'Your Trusted Retail Partner',
 };

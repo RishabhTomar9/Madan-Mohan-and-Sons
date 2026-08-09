@@ -53,10 +53,16 @@ export async function searchCustomers(searchTerm) {
     });
 }
 
-/**
- * Check if a customer exists with this normalized mobile.
- */
-export async function checkDuplicateCustomer(phone) {
+export async function checkDuplicateCustomer(phone, userId = null) {
+  if (userId) {
+    const q = query(collection(db, CUSTOMERS_COL), where('userId', '==', userId), limit(1));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const doc = snap.docs[0];
+      return { id: doc.id, ...doc.data() };
+    }
+  }
+
   const norm = normalizeMobile(phone);
   if (!norm) return null;
 
@@ -66,10 +72,15 @@ export async function checkDuplicateCustomer(phone) {
     limit(1)
   );
   
-  const snap = await getDocs(q);
-  if (!snap.empty) {
-    const doc = snap.docs[0];
-    return { id: doc.id, ...doc.data() };
+  try {
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const doc = snap.docs[0];
+      return { id: doc.id, ...doc.data() };
+    }
+  } catch (err) {
+    // If permission denied (e.g., customer checking by phone), return null to force creation
+    return null;
   }
   return null;
 }
@@ -77,7 +88,7 @@ export async function checkDuplicateCustomer(phone) {
 /**
  * Quick-create a customer during billing.
  */
-export async function quickCreateCustomer(name, phone = '', address = '', city = '') {
+export async function quickCreateCustomer(name, phone = '', address = '', city = '', userId = null) {
   const norm = normalizeMobile(phone);
 
   const data = {
@@ -95,6 +106,10 @@ export async function quickCreateCustomer(name, phone = '', address = '', city =
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
+  
+  if (userId) {
+    data.userId = userId;
+  }
 
   const docRef = await addDoc(collection(db, CUSTOMERS_COL), data);
   return { id: docRef.id, ...data };
