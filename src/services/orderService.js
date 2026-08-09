@@ -7,6 +7,9 @@ import { INVOICE_PREFIX } from '../utils/constants';
 
 const ORDERS_COL = 'orders';
 
+import { addNotification } from './notificationService';
+import { getAllUsers } from './userService';
+
 /**
  * Place a new customer order.
  */
@@ -20,6 +23,18 @@ export async function createOrder(data) {
   };
 
   const docRef = await addDoc(collection(db, ORDERS_COL), orderData);
+  
+  // Notify owners
+  try {
+    const users = await getAllUsers();
+    const owners = users.filter(u => u.role === 'owner');
+    for (const owner of owners) {
+      await addNotification(owner.id, 'New Order Received', `Order ${orderData.orderNumber} placed for ₹${orderData.totalAmount}`, 'info');
+    }
+  } catch (err) {
+    console.error('Failed to notify owners:', err);
+  }
+
   return { id: docRef.id, ...orderData };
 }
 

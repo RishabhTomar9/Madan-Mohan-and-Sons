@@ -6,26 +6,75 @@ service cloud.firestore {
       return request.auth != null;
     }
     
-    // For simplicity in this app, any authenticated user can read/write everything 
-    // EXCEPT that products and categories are globally readable by anyone.
-    // Real world app would enforce strict RBAC here.
+    function hasUserDoc() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isOwner() {
+      return isAuthenticated() && hasUserDoc() && getUserData().get('role', '') == 'owner';
+    }
+    
+    function isStaff() {
+      return isAuthenticated() && hasUserDoc() && (
+        getUserData().get('role', '') == 'owner' || 
+        getUserData().get('role', '') == 'manager' || 
+        getUserData().get('role', '') == 'cashier' || 
+        getUserData().get('customPermissions', []).size() > 0
+      );
+    }
+    
+    match /users/{userId} {
+      allow read: if isStaff() || request.auth.uid == userId;
+      allow write: if isOwner() || request.auth.uid == userId;
+    }
+    
+    match /customers/{docId} {
+      allow read, write: if isStaff();
+    }
     
     match /products/{docId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow write: if isStaff();
     }
     
     match /categories/{docId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow write: if isStaff();
     }
     
     match /orders/{docId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isStaff() || (isAuthenticated() && resource.data.customerId == request.auth.uid);
+      allow create: if isAuthenticated();
+    }
+
+    match /invoices/{docId} {
+      allow read, write: if isStaff();
+    }
+    
+    match /khata_transactions/{docId} {
+      allow read, write: if isStaff();
+    }
+    
+    match /inventory_transactions/{docId} {
+      allow read, write: if isStaff();
+    }
+    
+    match /settings/{docId} {
+      allow read: if true; // anyone needs store settings (logo, name)
+      allow write: if isStaff();
+    }
+    
+    match /notifications/{docId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isStaff());
+      allow write: if isAuthenticated();
     }
 
     match /{document=**} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isOwner();
     }
   }
 }

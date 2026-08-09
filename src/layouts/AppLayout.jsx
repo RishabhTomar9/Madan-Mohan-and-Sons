@@ -9,11 +9,11 @@ import { NAV_ITEMS } from '../utils/constants';
 import { NavLink, useNavigate } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
 import { LogOut } from 'lucide-react';
+import SEO from '../components/SEO';
 
 export default function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [moreDrawerOpen, setMoreDrawerOpen] = useState(false);
   const { userData, logout, hasPermission } = useAuth();
   const navigate = useNavigate();
 
@@ -28,20 +28,21 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <SEO title="Dashboard" />
       {/* Desktop sidebar */}
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
 
-      {/* Mobile sidebar drawer */}
+      {/* Mobile bottom menu drawer */}
       <Drawer
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
         title="Menu"
-        side="left"
+        side="bottom"
       >
-        <nav className="px-2 py-3 space-y-0.5">
+        <nav className="px-2 py-2 space-y-1">
           {navItems.map((item) => {
             const Icon = LucideIcons[item.icon];
             return (
@@ -50,8 +51,9 @@ export default function AppLayout() {
                 to={item.path}
                 onClick={() => setMobileMenuOpen(false)}
                 className={({ isActive }) => `
-                  flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                  ${isActive ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}
+                  flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold
+                  transition-colors duration-200
+                  ${isActive ? 'bg-indigo-50 text-indigo-700' : 'text-slate-700 hover:bg-slate-50'}
                 `}
               >
                 {Icon && <Icon size={20} />}
@@ -61,46 +63,10 @@ export default function AppLayout() {
           })}
           <hr className="my-2 border-slate-100" />
           <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50"
+            onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors duration-200"
           >
-            <LogOut size={20} />
-            <span>Logout</span>
-          </button>
-        </nav>
-      </Drawer>
-
-      {/* "More" drawer for mobile bottom nav */}
-      <Drawer
-        isOpen={moreDrawerOpen}
-        onClose={() => setMoreDrawerOpen(false)}
-        title="More"
-        side="right"
-      >
-        <nav className="px-2 py-3 space-y-0.5">
-          {navItems.map((item) => {
-            const Icon = LucideIcons[item.icon];
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={() => setMoreDrawerOpen(false)}
-                className={({ isActive }) => `
-                  flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                  ${isActive ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}
-                `}
-              >
-                {Icon && <Icon size={20} />}
-                <span>{item.label}</span>
-              </NavLink>
-            );
-          })}
-          <hr className="my-2 border-slate-100" />
-          <button
-            onClick={() => { setMoreDrawerOpen(false); handleLogout(); }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50"
-          >
-            <LogOut size={20} />
+            <LogOut size={20} className="text-red-500" />
             <span>Logout</span>
           </button>
         </nav>
@@ -124,7 +90,7 @@ export default function AppLayout() {
       </main>
 
       {/* Mobile bottom nav */}
-      <BottomNav onMoreClick={() => setMoreDrawerOpen(true)} />
+      <BottomNav onMoreClick={() => setMobileMenuOpen(true)} />
     </div>
   );
 }

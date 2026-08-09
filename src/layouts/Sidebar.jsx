@@ -32,8 +32,10 @@ export default function Sidebar({ collapsed, onToggle }) {
           className="w-9 h-9 rounded-xl object-cover shrink-0"
         />
         {!collapsed && (
-          <div className="min-w-0">
-            <h1 className="font-bold text-slate-900 text-sm truncate">{SHOP_INFO.name}</h1>
+          <div className="flex-1 min-w-0">
+            <h1 className="font-bold text-slate-900 text-sm leading-tight line-clamp-2">
+              {SHOP_INFO.name}
+            </h1>
           </div>
         )}
         <button

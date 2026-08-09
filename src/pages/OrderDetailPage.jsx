@@ -8,7 +8,7 @@ import { ArrowLeft, Printer, Check, X, MapPin, Phone, MessageCircle } from 'luci
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import { FullPageSpinner } from '../components/ui/Spinner';
-import { sendWhatsAppMessage } from '../utils/share';
+import { shareViaWhatsApp } from '../utils/share';
 
 export default function OrderDetailPage() {
   const { id } = useParams();
@@ -45,7 +45,7 @@ export default function OrderDetailPage() {
         if (newStatus === 'delivered') msg = `Hello ${order.customerName}, your order #${order.orderNumber} has been delivered. Thank you for shopping with Madhan Mohan & Sons!`;
         if (newStatus === 'cancelled') msg = `Hello ${order.customerName}, your order #${order.orderNumber} has been cancelled. If you have any questions, please contact us.`;
         
-        if (msg) sendWhatsAppMessage(order.customerPhone, msg);
+        if (msg) shareViaWhatsApp(order.customerPhone, msg);
       }
     } catch (err) {
       console.error(err);
