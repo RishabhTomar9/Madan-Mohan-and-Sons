@@ -43,6 +43,7 @@ export async function createInvoice(data) {
   const invoiceData = {
     invoiceNumber,
     ...data,
+    normalizedMobile: data.customer?.normalizedMobile || '',
     shopId: 'default',
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -50,8 +51,8 @@ export async function createInvoice(data) {
 
   const docRef = await addDoc(collection(db, INVOICES_COL), invoiceData);
 
-  // If this is a credit bill for a registered customer, automatically link to KhataBook
-  if (data.paymentMethod === 'credit' && data.customer?.id) {
+  // If this is a khata bill for a registered customer, automatically link to KhataBook
+  if (data.paymentMethod === 'khata' && data.customer?.id) {
     try {
       await addKhataTransaction(
         data.customer.id,
@@ -64,7 +65,7 @@ export async function createInvoice(data) {
         data.createdBy
       );
     } catch (err) {
-      console.error('Failed to link credit bill to KhataBook:', err);
+      console.error('Failed to link khata bill to KhataBook:', err);
       // We don't throw here to avoid failing the invoice creation
     }
   }
@@ -132,4 +133,25 @@ export async function getTodayInvoices() {
 
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/**
+ * Get invoices for a specific customer.
+ */
+export async function getCustomerInvoices(customerId) {
+  // Querying without orderBy to avoid needing a composite index, sorting in memory
+  const q = query(
+    collection(db, INVOICES_COL),
+    where('customer.id', '==', customerId)
+  );
+
+  const snap = await getDocs(q);
+  const invoices = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  
+  // Sort by createdAt descending
+  return invoices.sort((a, b) => {
+    const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+    const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+    return timeB - timeA;
+  });
 }

@@ -140,6 +140,9 @@ export default function AppRoutes() {
         </ProtectedRoute>
       } />
 
+      {/* Compatibility / Redirects */}
+      <Route path="/store-admin" element={<Navigate to="/dashboard" replace />} />
+
       {/* 404 */}
       <Route path="*" element={<SuspenseWrapper><NotFoundPage /></SuspenseWrapper>} />
     </Routes>

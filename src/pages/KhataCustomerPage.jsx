@@ -5,7 +5,7 @@ import { getCustomer } from '../services/customerService';
 import { getCustomerTransactions, addKhataTransaction } from '../services/transactionService';
 import { formatCurrency } from '../utils/currency';
 import { formatDateTime } from '../utils/date';
-import { sendWhatsAppMessage } from '../utils/share';
+import { shareViaWhatsApp } from '../utils/share';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
@@ -92,7 +92,7 @@ export default function KhataCustomerPage() {
       text = `Dear ${customer.name}, you have an advance balance of ${formatCurrency(Math.abs(customer.khataBalance))} at Madhan Mohan & Sons.`;
     }
     
-    sendWhatsAppMessage(customer.phone, text);
+    shareViaWhatsApp(customer.phone, text);
   };
 
   if (loading) return <FullPageSpinner />;
@@ -107,8 +107,12 @@ export default function KhataCustomerPage() {
             <ArrowLeft size={20} />
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold text-slate-900 truncate">{customer.name}</h1>
-            {customer.phone && <p className="text-sm text-slate-500">{customer.phone}</p>}
+            <h1 className="text-xl font-bold text-slate-900 truncate">{customer.name || 'Unnamed Customer'}</h1>
+            {(customer.normalizedMobile || customer.phone) && (
+              <p className="text-sm text-slate-500">
+                {(customer.normalizedMobile && customer.normalizedMobile !== '+') ? customer.normalizedMobile : customer.phone}
+              </p>
+            )}
           </div>
           <div className="flex gap-2">
             {customer.phone && (

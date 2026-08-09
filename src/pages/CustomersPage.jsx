@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCustomers } from '../services/customerService';
-import SearchBar from '../components/ui/SearchBar';
+import UnifiedCustomerSearch from '../components/billing/UnifiedCustomerSearch';
 import EmptyState from '../components/ui/EmptyState';
-import Button from '../components/ui/Button';
-import { Users, Plus } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { formatCurrency } from '../utils/currency';
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState([]);
-  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -24,25 +22,31 @@ export default function CustomersPage() {
     fetch();
   }, []);
 
-  const filtered = customers.filter((c) =>
-    c.name?.toLowerCase().includes(search.toLowerCase()) ||
-    c.phone?.includes(search)
-  );
+  const handleCustomerSelected = (customer) => {
+    if (customer && customer.id) {
+      navigate(`/customers/${customer.id}`);
+    }
+  };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900">Customers</h1>
-        <Button size="sm" icon={Plus}>Add Customer</Button>
       </div>
 
-      <SearchBar value={search} onChange={setSearch} placeholder="Search customers..." />
+      <UnifiedCustomerSearch 
+        onCustomerSelected={handleCustomerSelected} 
+        selectedCustomer={null} 
+        onClear={() => {}} 
+      />
 
-      {filtered.length === 0 ? (
-        <EmptyState icon={Users} title="No customers yet" description="Customers will appear here as you create bills." />
+      <h2 className="font-semibold text-slate-700 mt-6 mb-2">Recent Customers</h2>
+      
+      {customers.length === 0 ? (
+        <EmptyState icon={Users} title="No customers yet" description="Customers will appear here as you create bills or add them above." />
       ) : (
         <div className="space-y-2">
-          {filtered.map((c) => (
+          {customers.map((c) => (
             <button
               key={c.id}
               onClick={() => navigate(`/customers/${c.id}`)}
@@ -50,12 +54,12 @@ export default function CustomersPage() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-semibold text-slate-900">{c.name}</p>
-                  {c.phone && <p className="text-xs text-slate-500">{c.phone}</p>}
+                  <p className="font-semibold text-slate-900">{c.name || 'Unnamed Customer'}</p>
+                  <p className="text-xs text-slate-500">{(c.normalizedMobile && c.normalizedMobile !== '+') ? c.normalizedMobile : c.phone}</p>
                 </div>
                 {c.khataBalance !== 0 && (
-                  <p className={`text-sm font-bold ${c.khataBalance > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                    {formatCurrency(Math.abs(c.khataBalance))}
+                  <p className={`text-sm font-bold ${c.khataBalance > 0 ? 'text-orange-600' : 'text-emerald-600'}`}>
+                    Khata: {formatCurrency(Math.abs(c.khataBalance))}
                   </p>
                 )}
               </div>

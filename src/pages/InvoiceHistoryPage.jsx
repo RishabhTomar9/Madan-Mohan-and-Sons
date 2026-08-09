@@ -70,7 +70,14 @@ export default function InvoiceHistoryPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-semibold text-slate-900">{inv.invoiceNumber}</p>
-                  <p className="text-sm text-slate-500">{inv.customer?.name || 'Walk-in'}</p>
+                  <p className="text-sm text-slate-500">
+                    {inv.customer?.name || 'Walk-in'}
+                    {inv.customer && (inv.customer.normalizedMobile || inv.customer.phone) && (
+                      <span className="ml-1 text-xs">
+                        • {((inv.customer.normalizedMobile && inv.customer.normalizedMobile !== '+') ? inv.customer.normalizedMobile : inv.customer.phone)}
+                      </span>
+                    )}
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="font-bold text-slate-900">{formatCurrency(inv.grandTotal)}</p>

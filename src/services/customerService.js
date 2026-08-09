@@ -7,43 +7,91 @@ import { db } from '../firebase';
 const CUSTOMERS_COL = 'customers';
 
 /**
- * Search customers by name or phone.
+ * Normalizes an Indian mobile number.
+ * E.g., '9876543210', '+919876543210', '919876543210' -> '+919876543210'
+ */
+export function normalizeMobile(phone) {
+  if (!phone) return '';
+  const cleaned = phone.replace(/\D/g, '');
+  if (cleaned.length === 10) return '+91' + cleaned;
+  if (cleaned.length === 12 && cleaned.startsWith('91')) return '+' + cleaned;
+  return '+' + cleaned; // Fallback
+}
+
+/**
+ * Search customers heavily prioritizing normalized mobile.
  */
 export async function searchCustomers(searchTerm) {
   if (!searchTerm || searchTerm.length < 2) return [];
-
+  
   const term = searchTerm.toLowerCase();
-
-  // Firestore doesn't support full-text search natively.
-  // We'll query by searchName field and filter client-side.
-  const q = query(
-    collection(db, CUSTOMERS_COL),
-    orderBy('name'),
-    limit(20)
-  );
+  
+  // If the user typed digits, try to normalize and search by normalizedMobile
+  const isNumeric = /^[0-9+\-\s()]+$/.test(searchTerm);
+  
+  let q;
+  if (isNumeric && searchTerm.replace(/\D/g, '').length >= 3) {
+    // Basic search on normalizedMobile (prefix or exact match depending on input)
+    // Firestore doesn't do substring on strings easily without external engines, 
+    // but we can query by prefix if we assume they type the start of the number.
+    // However, it's safer to just fetch customers (limit 100) and filter in memory for robust partial matches.
+    q = query(collection(db, CUSTOMERS_COL), limit(100));
+  } else {
+    q = query(collection(db, CUSTOMERS_COL), orderBy('name'), limit(50));
+  }
 
   const snap = await getDocs(q);
+  const normalizedSearch = normalizeMobile(searchTerm);
+
   return snap.docs
     .map((d) => ({ id: d.id, ...d.data() }))
-    .filter((c) =>
-      c.name?.toLowerCase().includes(term) ||
-      c.phone?.includes(searchTerm)
-    );
+    .filter((c) => {
+      const matchName = c.name?.toLowerCase().includes(term);
+      const matchRawPhone = c.phone?.includes(searchTerm);
+      const matchNormalized = c.normalizedMobile && normalizedSearch && c.normalizedMobile.includes(normalizedSearch.replace('+91', ''));
+      return matchName || matchRawPhone || matchNormalized;
+    });
+}
+
+/**
+ * Check if a customer exists with this normalized mobile.
+ */
+export async function checkDuplicateCustomer(phone) {
+  const norm = normalizeMobile(phone);
+  if (!norm) return null;
+
+  const q = query(
+    collection(db, CUSTOMERS_COL),
+    where('normalizedMobile', '==', norm),
+    limit(1)
+  );
+  
+  const snap = await getDocs(q);
+  if (!snap.empty) {
+    const doc = snap.docs[0];
+    return { id: doc.id, ...doc.data() };
+  }
+  return null;
 }
 
 /**
  * Quick-create a customer during billing.
  */
-export async function quickCreateCustomer(name, phone = '') {
+export async function quickCreateCustomer(name, phone = '', address = '', city = '') {
+  const norm = normalizeMobile(phone);
+
   const data = {
     name,
     phone,
+    normalizedMobile: norm,
     email: '',
-    address: '',
+    address,
+    city,
     gstin: '',
     shopId: 'default',
     khataBalance: 0,
     totalPurchases: 0,
+    totalBills: 0,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
@@ -74,15 +122,13 @@ export async function getCustomers() {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
-/**
- * Update a customer.
- */
 export async function updateCustomer(id, data) {
   const ref = doc(db, CUSTOMERS_COL, id);
-  await updateDoc(ref, {
-    ...data,
-    updatedAt: serverTimestamp(),
-  });
+  const updates = { ...data, updatedAt: serverTimestamp() };
+  if (data.phone !== undefined) {
+    updates.normalizedMobile = normalizeMobile(data.phone);
+  }
+  await updateDoc(ref, updates);
 }
 
 /**

@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // For simplicity in this app, any authenticated user can read/write everything 
+    // EXCEPT that products and categories are globally readable by anyone.
+    // Real world app would enforce strict RBAC here.
+    
+    match /products/{docId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+    
+    match /categories/{docId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+    
+    match /orders/{docId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}
