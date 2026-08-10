@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getCustomer } from '../services/customerService';
 import { getCustomerTransactions, addKhataTransaction } from '../services/transactionService';
+import { getStoreSettings } from '../services/settingsService';
 import { formatCurrency } from '../utils/currency';
 import { formatDateTime } from '../utils/date';
 import { shareViaWhatsApp } from '../utils/share';
@@ -19,6 +20,7 @@ export default function KhataCustomerPage() {
 
   const [customer, setCustomer] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Modal state
@@ -31,12 +33,14 @@ export default function KhataCustomerPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [customerData, txData] = await Promise.all([
+        const [customerData, txData, settingsData] = await Promise.all([
           getCustomer(customerId),
-          getCustomerTransactions(customerId)
+          getCustomerTransactions(customerId),
+          getStoreSettings()
         ]);
         setCustomer(customerData);
         setTransactions(txData);
+        setSettings(settingsData);
       } catch (err) {
         console.error(err);
       } finally {
@@ -85,12 +89,18 @@ export default function KhataCustomerPage() {
       return;
     }
 
+    const link = `${window.location.origin}/khata-sync/${customer.id}`;
     let text = '';
     if (customer.khataBalance > 0) {
-      text = `Dear ${customer.name}, your pending balance at Madan Mohan & Sons is ${formatCurrency(customer.khataBalance)}. Please arrange for payment. Thank you!`;
+      text = `Dear ${customer.name}, your pending balance at Madan Mohan & Sons is ${formatCurrency(customer.khataBalance)}. Please arrange for payment.`;
+      if (settings?.upiId) {
+        text += `\nYou can pay via UPI: ${settings.upiId}`;
+      }
     } else {
       text = `Dear ${customer.name}, you have an advance balance of ${formatCurrency(Math.abs(customer.khataBalance))} at Madan Mohan & Sons.`;
     }
+    
+    text += `\n\nView your live Khata ledger here: ${link}`;
 
     shareViaWhatsApp(customer.phone, text);
   };

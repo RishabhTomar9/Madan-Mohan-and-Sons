@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, X, Info, Check } from 'lucide-react';
+import { Plus, Trash2, X, Info, Check, Printer, Share2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { formatCurrency, addMoney, multiplyMoney, calculateDiscount, calculateTax } from '../utils/currency';
 
@@ -8,7 +8,7 @@ import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import Dropdown from '../components/ui/Dropdown';
 import { createInvoice } from '../services/invoiceService';
-import { getCustomers } from '../services/customerService';
+import { getCustomers, updateCustomer } from '../services/customerService';
 import { getStoreSettings } from '../services/settingsService';
 import { getProducts } from '../services/productService';
 import UnifiedCustomerSearch from '../components/billing/UnifiedCustomerSearch';
@@ -217,6 +217,14 @@ export default function BillingPage() {
 
       const invoice = await createInvoice(invoiceData);
       setLastInvoice(invoice);
+
+      if (paymentMethod === 'khata' && customer?.id) {
+        try {
+          await updateCustomer(customer.id, { khataEnabled: true });
+        } catch (updateErr) {
+          console.error('Failed to auto-enable Khata for customer:', updateErr);
+        }
+      }
 
       // Reset
       setItems([]);
@@ -462,6 +470,7 @@ export default function BillingPage() {
                   <div className="text-right">
                     <p className="text-xs sm:text-sm font-medium text-slate-800 truncate max-w-[100px] sm:max-w-[150px]">{customer.name}</p>
                     <p className="text-[10px] sm:text-xs text-slate-500">{(customer.normalizedMobile && customer.normalizedMobile !== '+') ? customer.normalizedMobile : customer.phone}</p>
+                    {customer.email && <p className="text-[10px] sm:text-xs text-slate-400">{customer.email}</p>}
                   </div>
                 )}
               </div>
@@ -842,13 +851,13 @@ function DiscountModal({ isOpen, onClose, discount, onApply, taxRate, taxType, o
                 { value: 'fixed', label: '₹' },
                 { value: 'percent', label: '%' }
               ]}
-              className="w-1/3"
+              className="w-28 shrink-0"
             />
             <input
               type="number"
               value={val}
               onChange={(e) => setVal(e.target.value)}
-              className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              className="flex-1 min-w-0 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
               placeholder="0.00"
               min="0"
             />
@@ -862,11 +871,11 @@ function DiscountModal({ isOpen, onClose, discount, onApply, taxRate, taxType, o
               type="number"
               value={tr}
               onChange={(e) => setTr(e.target.value)}
-              className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              className="flex-1 min-w-0 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
               placeholder="0"
               min="0"
             />
-            <div className="flex items-center justify-center px-4 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-medium">
+            <div className="flex shrink-0 items-center justify-center px-4 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-medium">
               %
             </div>
             <Dropdown
@@ -878,7 +887,7 @@ function DiscountModal({ isOpen, onClose, discount, onApply, taxRate, taxType, o
                 { value: 'SGST', label: 'SGST' },
                 { value: 'IGST', label: 'IGST' }
               ]}
-              className="w-1/3"
+              className="w-32 shrink-0"
             />
           </div>
         </div>
@@ -953,7 +962,11 @@ function InvoiceSuccessModal({ invoice, storeSettings, onClose, onNewBill }) {
   const printRef = useRef(null);
 
   const handlePrint = () => {
+    const originalTitle = document.title;
+    const customerName = invoice?.customer?.name || 'Walk-in Customer';
+    document.title = `Invoice_${invoice?.invoiceNumber}_${customerName}`.replace(/\s+/g, '_');
     window.print();
+    document.title = originalTitle;
   };
 
   return (
@@ -977,16 +990,34 @@ function InvoiceSuccessModal({ invoice, storeSettings, onClose, onNewBill }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Button onClick={handlePrint} className="bg-slate-900 hover:bg-slate-800" size="lg">
-            Print Bill
+        <div className="pt-6 grid grid-cols-2 gap-3 sm:flex sm:justify-end">
+          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto text-slate-600 hover:text-slate-900">
+            Close
           </Button>
-          <Button variant="outline" onClick={onNewBill} size="lg">
-            New Bill
+          <Button variant="secondary" onClick={() => {
+            const text = `Invoice ${invoice.invoiceNumber}\nTotal: ${formatCurrency(invoice.grandTotal)}\n\nThank you for shopping with us!`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+          }} icon={Share2} className="w-full sm:col-span-2 sm:w-auto">
+            Share Bill
+          </Button>
+          {invoice.paymentMethod === 'khata' && (
+             <Button variant="outline" className="w-full sm:col-span-2 sm:w-auto text-emerald-600 border-emerald-200 hover:bg-emerald-50" onClick={() => {
+                const link = `${window.location.origin}/khata-sync/${invoice.customer.id}`;
+                let text = `Dear ${invoice.customer.name}, your Khata ledger is ready.`;
+                if (storeSettings?.upiId) {
+                  text += `\nYou can pay your dues via UPI: ${storeSettings.upiId}`;
+                }
+                text += `\n\nView your live ledger here: ${link}`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+             }}>
+               Share Khata Link
+             </Button>
+          )}
+          <Button variant="primary" onClick={handlePrint} icon={Printer} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 shadow-sm">
+            Print Bill
           </Button>
         </div>
       </div>
-
     </Modal>
   );
 }

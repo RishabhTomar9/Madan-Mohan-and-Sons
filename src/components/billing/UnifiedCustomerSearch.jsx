@@ -126,6 +126,11 @@ export default function UnifiedCustomerSearch({ onCustomerSelected, selectedCust
             <p className="text-xs text-slate-600 flex items-center gap-1">
               <Phone className="h-3 w-3" /> {(selectedCustomer.normalizedMobile && selectedCustomer.normalizedMobile !== '+') ? selectedCustomer.normalizedMobile : (selectedCustomer.phone || 'N/A')}
             </p>
+            {selectedCustomer.email && (
+              <p className="text-xs text-slate-500 mt-0.5">
+                {selectedCustomer.email}
+              </p>
+            )}
             {(selectedCustomer.khataBalance > 0) && (
               <p className="text-[10px] md:text-xs font-bold text-orange-600 mt-0.5">
                 Khata: {formatCurrency(selectedCustomer.khataBalance)}
@@ -189,6 +194,7 @@ export default function UnifiedCustomerSearch({ onCustomerSelected, selectedCust
                     <div>
                       <p className="font-medium text-slate-900">{customer.name || 'Unnamed Customer'}</p>
                       <p className="text-sm text-slate-500">{(customer.normalizedMobile && customer.normalizedMobile !== '+') ? customer.normalizedMobile : customer.phone}</p>
+                      {customer.email && <p className="text-xs text-slate-400 mt-0.5">{customer.email}</p>}
                     </div>
                     {customer.khataBalance > 0 && (
                       <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-full">

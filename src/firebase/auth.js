@@ -41,36 +41,29 @@ export async function handleRedirectResult() {
 }
 
 export async function signInWithGoogle() {
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  
-  if (isMobile) {
-    try {
-      await signInWithRedirect(auth, googleProvider);
-      return null; // Page will redirect, execution stops
-    } catch (error) {
-      console.error('Failed to trigger redirect login:', error);
-      throw new Error('Failed to start mobile login. Please check your browser settings.');
-    }
-  }
-
-  // Desktop flow (Popup)
   try {
     const result = await signInWithPopup(auth, googleProvider);
     return await processUserDoc(result.user);
   } catch (error) {
-    if (error.code === 'auth/popup-closed-by-user') {
-      throw new Error('Sign-in popup was closed. Please try again.');
+    // If popup is blocked or web storage is unsupported (common in some mobile browsers/in-app browsers)
+    if (error.code === 'auth/popup-blocked' || error.code === 'auth/web-storage-unsupported') {
+      try {
+        await signInWithRedirect(auth, googleProvider);
+        return null; // Page will redirect, execution stops
+      } catch (redirectError) {
+        console.error('Failed to trigger redirect login:', redirectError);
+        throw new Error('Failed to start login. Please check your browser settings.');
+      }
     }
-    if (error.code === 'auth/popup-blocked') {
-      throw new Error('Popup was blocked by browser. Please allow popups and try again.');
+    
+    if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+      return null; // User closed the popup, don't throw an error
     }
     if (error.code === 'auth/network-request-failed') {
       throw new Error('Network error. Please check your connection and try again.');
     }
-    if (error.code === 'auth/cancelled-popup-request') {
-      return null;
-    }
-    console.error('Popup sign-in error:', error);
+    
+    console.error('Sign-in error:', error);
     throw new Error('Authentication failed. Please try again.');
   }
 }

@@ -76,7 +76,13 @@ export default function InvoiceDetailPage() {
           }}>
             <span className="hidden sm:inline">WhatsApp</span>
           </Button>
-          <Button variant="primary" size="sm" icon={Printer} onClick={() => window.print()}>
+          <Button variant="primary" size="sm" icon={Printer} onClick={() => {
+            const originalTitle = document.title;
+            const customerName = invoice?.customer?.name || 'Walk-in Customer';
+            document.title = `Invoice_${invoice?.invoiceNumber}_${customerName}`.replace(/\s+/g, '_');
+            window.print();
+            document.title = originalTitle;
+          }}>
             Print
           </Button>
         </div>

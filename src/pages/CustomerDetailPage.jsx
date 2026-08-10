@@ -23,6 +23,7 @@ export default function CustomerDetailPage() {
   const [editEmail, setEditEmail] = useState('');
   const [editAddress, setEditAddress] = useState('');
   const [editCity, setEditCity] = useState('');
+  const [editKhataEnabled, setEditKhataEnabled] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -42,6 +43,7 @@ export default function CustomerDetailPage() {
           setEditEmail(custData.email || '');
           setEditAddress(custData.address || '');
           setEditCity(custData.city || '');
+          setEditKhataEnabled(!!custData.khataEnabled);
         }
       } catch (err) {
         console.error(err);
@@ -62,6 +64,7 @@ export default function CustomerDetailPage() {
         email: editEmail,
         address: editAddress,
         city: editCity,
+        khataEnabled: editKhataEnabled,
       };
       await updateCustomer(id, updates);
       
@@ -139,13 +142,17 @@ export default function CustomerDetailPage() {
           
           {/* Actions */}
           <div className="w-full sm:w-auto">
-            <Button 
-              onClick={() => navigate(`/khatabook/${customer.id}`)} 
-              icon={BookOpen}
-              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm"
-            >
-              Open Khata Ledger
-            </Button>
+            {customer.khataEnabled ? (
+              <Button 
+                onClick={() => navigate(`/khatabook/${customer.id}`)} 
+                icon={BookOpen}
+                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm"
+              >
+                Open Khata Ledger
+              </Button>
+            ) : (
+              <p className="text-xs font-medium text-slate-400 bg-slate-100 px-3 py-1.5 rounded-full">Khata Disabled</p>
+            )}
           </div>
         </div>
         
@@ -230,6 +237,18 @@ export default function CustomerDetailPage() {
             value={editCity}
             onChange={(e) => setEditCity(e.target.value)}
           />
+          <div className="flex items-center gap-2 mt-2">
+            <input
+              type="checkbox"
+              id="khataEnabled"
+              checked={editKhataEnabled}
+              onChange={(e) => setEditKhataEnabled(e.target.checked)}
+              className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
+            />
+            <label htmlFor="khataEnabled" className="text-sm font-medium text-slate-700">
+              Enable Khata for this customer
+            </label>
+          </div>
           <div className="pt-4 flex justify-end gap-3">
             <Button variant="outline" type="button" onClick={() => setShowEditModal(false)}>
               Cancel

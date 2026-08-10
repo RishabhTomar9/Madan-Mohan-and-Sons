@@ -28,6 +28,8 @@ const CartPage = lazy(() => import('../pages/CartPage'));
 const CheckoutPage = lazy(() => import('../pages/CheckoutPage'));
 const StoreOrdersPage = lazy(() => import('../pages/StoreOrdersPage'));
 const StoreOrderDetailPage = lazy(() => import('../pages/StoreOrderDetailPage'));
+const KhataSyncPage = lazy(() => import('../pages/KhataSyncPage'));
+const CustomerKhataView = lazy(() => import('../pages/CustomerKhataView'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 
 function SuspenseWrapper({ children }) {
@@ -149,6 +151,14 @@ export default function AppRoutes() {
       <Route path="/store/orders/:id" element={
         <ProtectedRoute>
           <SuspenseWrapper><StoreOrderDetailPage /></SuspenseWrapper>
+        </ProtectedRoute>
+      } />
+      
+      {/* Khata Routes for Customer */}
+      <Route path="/khata-sync/:customerId" element={<SuspenseWrapper><KhataSyncPage /></SuspenseWrapper>} />
+      <Route path="/store/khata" element={
+        <ProtectedRoute>
+          <SuspenseWrapper><CustomerKhataView /></SuspenseWrapper>
         </ProtectedRoute>
       } />
 

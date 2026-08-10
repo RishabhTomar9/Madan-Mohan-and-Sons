@@ -65,6 +65,11 @@ export default function PrintReceipt({ invoice, storeSettings }) {
               <span className="font-semibold text-slate-500">Phone:</span> {(invoice.customer.normalizedMobile && invoice.customer.normalizedMobile !== '+') ? invoice.customer.normalizedMobile : invoice.customer.phone}
             </p>
           )}
+          {invoice.customer?.email && (
+            <p className="text-sm text-slate-700 mt-1">
+              <span className="font-semibold text-slate-500">Email:</span> {invoice.customer.email}
+            </p>
+          )}
           {invoice.customer?.address && (
             <p className="text-sm text-slate-700 mt-1"><span className="font-semibold text-slate-500">Address:</span> {invoice.customer.address}</p>
           )}
