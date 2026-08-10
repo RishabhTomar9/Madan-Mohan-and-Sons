@@ -7,6 +7,7 @@ import { Package, Search, ChevronRight, Clock, CheckCircle, Truck, XCircle } fro
 import Badge from '../components/ui/Badge';
 import { FullPageSpinner } from '../components/ui/Spinner';
 import EmptyState from '../components/ui/EmptyState';
+import Dropdown from '../components/ui/Dropdown';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -46,18 +47,19 @@ export default function OrdersPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-slate-900">Online Orders</h1>
         
-        <select 
+        <Dropdown 
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-xl border border-slate-200 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-        >
-          <option value="">All Orders</option>
-          <option value="pending">Pending</option>
-          <option value="accepted">Accepted</option>
-          <option value="dispatched">Dispatched</option>
-          <option value="delivered">Delivered</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
+          onChange={setStatusFilter}
+          options={[
+            { value: '', label: 'All Orders' },
+            { value: 'pending', label: 'Pending' },
+            { value: 'accepted', label: 'Accepted' },
+            { value: 'dispatched', label: 'Dispatched' },
+            { value: 'delivered', label: 'Delivered' },
+            { value: 'cancelled', label: 'Cancelled' }
+          ]}
+          className="w-full sm:w-48"
+        />
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getProduct, createProduct, updateProduct, getCategories, addCategory } from '../services/productService';
 import { uploadImage } from '../services/cloudinaryService';
 import Button from '../components/ui/Button';
+import Dropdown from '../components/ui/Dropdown';
 import Input from '../components/ui/Input';
 import Modal from '../components/ui/Modal';
 import { ArrowLeft, Upload, X, Plus } from 'lucide-react';
@@ -201,15 +202,15 @@ export default function ProductFormPage() {
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
             <div className="flex gap-2">
-              <select 
-                name="categoryId" 
+              <Dropdown 
                 value={formData.categoryId} 
-                onChange={handleChange}
-                className="flex-1 rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-indigo-500 focus:outline-none"
-              >
-                <option value="">Select Category</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+                onChange={(val) => handleChange({ target: { name: 'categoryId', value: val }})}
+                options={[
+                  { value: '', label: 'Select Category' },
+                  ...categories.map(c => ({ value: c.id, label: c.name }))
+                ]}
+                className="flex-1"
+              />
               <Button type="button" variant="outline" icon={Plus} onClick={() => setShowCatModal(true)}>New</Button>
             </div>
           </div>
@@ -255,18 +256,18 @@ export default function ProductFormPage() {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Opening Stock</label>
                 <div className="flex gap-2">
                   <Input type="number" name="stockQuantity" value={formData.stockQuantity} onChange={handleChange} placeholder="0" className="flex-1" />
-                  <select 
-                    name="unit" 
+                  <Dropdown 
                     value={formData.unit} 
-                    onChange={handleChange}
-                    className="w-24 rounded-xl border border-slate-200 px-3 py-2.5 text-sm bg-slate-50 focus:border-indigo-500 focus:outline-none"
-                  >
-                    <option value="pcs">Pcs</option>
-                    <option value="kg">Kg</option>
-                    <option value="g">g</option>
-                    <option value="ltr">Ltr</option>
-                    <option value="box">Box</option>
-                  </select>
+                    onChange={(val) => handleChange({ target: { name: 'unit', value: val }})}
+                    options={[
+                      { value: 'pcs', label: 'Pcs' },
+                      { value: 'kg', label: 'Kg' },
+                      { value: 'g', label: 'g' },
+                      { value: 'l', label: 'L' },
+                      { value: 'ml', label: 'ml' }
+                    ]}
+                    className="w-32"
+                  />
                 </div>
               </div>
             )}

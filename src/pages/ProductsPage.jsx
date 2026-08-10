@@ -6,6 +6,7 @@ import SearchBar from '../components/ui/SearchBar';
 import EmptyState from '../components/ui/EmptyState';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
+import Dropdown from '../components/ui/Dropdown';
 import { Package, Plus, Filter, Image as ImageIcon } from 'lucide-react';
 import { FullPageSpinner } from '../components/ui/Spinner';
 
@@ -54,16 +55,15 @@ export default function ProductsPage() {
         <div className="flex-1">
           <SearchBar value={search} onChange={setSearch} placeholder="Search products..." />
         </div>
-        <select
+        <Dropdown
           value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none"
-        >
-          <option value="">All Categories</option>
-          {categories.map(c => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+          onChange={setSelectedCategory}
+          options={[
+            { value: '', label: 'All Categories' },
+            ...categories.map(c => ({ value: c.id, label: c.name }))
+          ]}
+          className="w-full sm:w-48"
+        />
       </div>
 
       {filtered.length === 0 ? (

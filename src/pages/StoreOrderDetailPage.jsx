@@ -67,7 +67,7 @@ export default function StoreOrderDetailPage() {
         <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-100 -translate-y-1/2 z-0" />
         <div 
           className="absolute top-1/2 left-0 h-1 bg-indigo-600 -translate-y-1/2 z-0 transition-all duration-500"
-          style={{ width: currentStatusIndex === -1 ? '0%' : \`\${(currentStatusIndex / (steps.length - 1)) * 100}%\` }}
+          style={{ width: currentStatusIndex === -1 ? '0%' : `${(currentStatusIndex / (steps.length - 1)) * 100}%` }}
         />
         
         {steps.map((step, idx) => {
@@ -77,12 +77,12 @@ export default function StoreOrderDetailPage() {
           
           return (
             <div key={step.id} className="relative z-10 flex flex-col items-center gap-2">
-              <div className={\`w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-sm \${
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-sm ${
                 isCompleted ? 'bg-indigo-600 text-white' : 'bg-white border-2 border-slate-200 text-slate-400'
-              }\`}>
+              }`}>
                 <Icon size={20} />
               </div>
-              <span className={\`text-xs font-semibold \${isCurrent ? 'text-indigo-900' : isCompleted ? 'text-slate-900' : 'text-slate-400'}\`}>
+              <span className={`text-xs font-semibold ${isCurrent ? 'text-indigo-900' : isCompleted ? 'text-slate-900' : 'text-slate-400'}`}>
                 {step.label}
               </span>
             </div>

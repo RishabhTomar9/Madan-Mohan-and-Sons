@@ -3,12 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, X, Info, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { formatCurrency, addMoney, multiplyMoney, calculateDiscount, calculateTax } from '../utils/currency';
-import { TAX_TYPES } from '../utils/constants';
+
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
+import Dropdown from '../components/ui/Dropdown';
 import { createInvoice } from '../services/invoiceService';
 import { getCustomers } from '../services/customerService';
 import { getStoreSettings } from '../services/settingsService';
+import { getProducts } from '../services/productService';
 import UnifiedCustomerSearch from '../components/billing/UnifiedCustomerSearch';
 import PrintReceipt from '../components/billing/PrintReceipt';
 
@@ -45,6 +47,32 @@ export default function BillingPage() {
   const [showAddCharge, setShowAddCharge] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [lastInvoice, setLastInvoice] = useState(null);
+
+  // Product Search state
+  const [productSuggestions, setProductSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [allProducts, setAllProducts] = useState([]);
+
+  useEffect(() => {
+    getProducts().then(setAllProducts).catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (productName.trim().length >= 2) {
+        const filtered = allProducts.filter(p => 
+          p.name.toLowerCase().includes(productName.toLowerCase()) || 
+          (p.barcode && p.barcode.includes(productName))
+        );
+        setProductSuggestions(filtered.slice(0, 5));
+        setShowSuggestions(true);
+      } else {
+        setProductSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [productName, allProducts]);
 
   const nameInputRef = useRef(null);
   const amountInputRef = useRef(null);
@@ -327,12 +355,15 @@ export default function BillingPage() {
                 </div>
               </div>
 
-              <div>
+              <div className="relative">
                 <input
                   ref={nameInputRef}
                   type="text"
                   value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
+                  onChange={(e) => {
+                    setProductName(e.target.value);
+                    setShowSuggestions(true);
+                  }}
                   onFocus={() => setActiveField('name')}
                   placeholder="Product Name (Optional)"
                   className={`w-full rounded-lg sm:rounded-xl border px-3 py-2 sm:py-3 text-xs sm:text-sm
@@ -347,6 +378,38 @@ export default function BillingPage() {
                     }
                   }}
                 />
+                
+                <AnimatePresence>
+                  {showSuggestions && productSuggestions.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      className="absolute z-50 mt-1 w-full bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden"
+                    >
+                      {productSuggestions.map((prod) => (
+                        <button
+                          key={prod.id}
+                          type="button"
+                          className="w-full text-left px-4 py-2 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 flex justify-between items-center"
+                          onClick={() => {
+                            setProductName(prod.name);
+                            if (prod.price) setAmount(prod.price.toString());
+                            setShowSuggestions(false);
+                            amountInputRef.current?.focus();
+                            setActiveField('amount');
+                          }}
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-slate-800">{prod.name}</p>
+                            <p className="text-[10px] text-slate-500">{prod.stockQuantity} in stock</p>
+                          </div>
+                          <span className="text-sm font-bold text-indigo-600">{formatCurrency(prod.price)}</span>
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               <Button
@@ -577,12 +640,18 @@ export default function BillingPage() {
 
       {/* Success Modal + Print Trigger */}
       {lastInvoice && (
-        <InvoiceSuccessModal
-          invoice={lastInvoice}
-          storeSettings={storeSettings}
-          onClose={() => setLastInvoice(null)}
-          onNewBill={() => setLastInvoice(null)}
-        />
+        <>
+          <InvoiceSuccessModal
+            invoice={lastInvoice}
+            storeSettings={storeSettings}
+            onClose={() => setLastInvoice(null)}
+            onNewBill={() => setLastInvoice(null)}
+          />
+          {/* Hidden Print Receipt component that only shows during window.print() */}
+          <div className="hidden print:block print-only bg-white z-[9999]">
+            <PrintReceipt invoice={lastInvoice} storeSettings={storeSettings} />
+          </div>
+        </>
       )}
     </div>
   );
@@ -766,14 +835,15 @@ function DiscountModal({ isOpen, onClose, discount, onApply, taxRate, taxType, o
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">Discount</label>
           <div className="flex gap-2">
-            <select
+            <Dropdown
               value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 w-1/3"
-            >
-              <option value="fixed">₹</option>
-              <option value="percent">%</option>
-            </select>
+              onChange={setType}
+              options={[
+                { value: 'fixed', label: '₹' },
+                { value: 'percent', label: '%' }
+              ]}
+              className="w-1/3"
+            />
             <input
               type="number"
               value={val}
@@ -799,15 +869,17 @@ function DiscountModal({ isOpen, onClose, discount, onApply, taxRate, taxType, o
             <div className="flex items-center justify-center px-4 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-medium">
               %
             </div>
-            <select
+            <Dropdown
               value={tt}
-              onChange={(e) => setTt(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 w-1/3"
-            >
-              {['GST', 'CGST', 'SGST', 'IGST'].map(t => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
+              onChange={setTt}
+              options={[
+                { value: 'GST', label: 'GST' },
+                { value: 'CGST', label: 'CGST' },
+                { value: 'SGST', label: 'SGST' },
+                { value: 'IGST', label: 'IGST' }
+              ]}
+              className="w-1/3"
+            />
           </div>
         </div>
 
@@ -915,10 +987,6 @@ function InvoiceSuccessModal({ invoice, storeSettings, onClose, onNewBill }) {
         </div>
       </div>
 
-      {/* Hidden Print Receipt component that only shows during window.print() */}
-      <div className="hidden print:block print-only bg-white z-[9999]">
-        <PrintReceipt invoice={invoice} storeSettings={storeSettings} />
-      </div>
     </Modal>
   );
 }

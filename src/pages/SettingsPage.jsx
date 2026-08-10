@@ -5,6 +5,7 @@ import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Modal from '../components/ui/Modal';
+import Dropdown from '../components/ui/Dropdown';
 import { getStoreSettings, saveStoreSettings } from '../services/settingsService';
 import { getAllUsers, updateUserAccess } from '../services/userService';
 import { ROLE_PERMISSIONS, ROLES } from '../utils/constants';
@@ -127,62 +128,9 @@ export default function SettingsPage() {
 
       {/* User Management Section (Owner Only) */}
       {userData?.role === 'owner' && <UserManagementSection />}
-
-      {/* Database Tools (Owner Only) */}
-      {userData?.role === 'owner' && <DatabaseToolsSection />}
     </div>
   );
 }
-
-// ---------- Database Tools Section ----------
-
-import { seedDatabase } from '../utils/seedData';
-import { Database, AlertTriangle } from 'lucide-react';
-import toast from 'react-hot-toast';
-
-function DatabaseToolsSection() {
-  const [seeding, setSeeding] = useState(false);
-
-  const handleSeed = async () => {
-    if (!window.confirm('Are you sure you want to seed the database? This will add 200 dummy products and 20 categories.')) {
-      return;
-    }
-    setSeeding(true);
-    const loadingToast = toast.loading('Seeding database... This might take a moment.');
-    try {
-      await seedDatabase();
-      toast.success('Database seeded successfully!', { id: loadingToast });
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to seed database.', { id: loadingToast });
-    } finally {
-      setSeeding(false);
-    }
-  };
-
-  return (
-    <div className="bg-white rounded-2xl border border-red-200 p-6 shadow-sm">
-      <div className="flex items-center gap-2 mb-4">
-        <Database size={20} className="text-red-500" />
-        <h2 className="font-semibold text-slate-900">Database Tools (Developer)</h2>
-      </div>
-      <div className="p-4 bg-red-50 rounded-xl border border-red-100 flex flex-col sm:flex-row items-center gap-4 justify-between">
-        <div className="flex items-start gap-3">
-          <AlertTriangle size={24} className="text-red-500 shrink-0 mt-0.5" />
-          <div>
-            <h3 className="font-bold text-red-900">Seed Catalog</h3>
-            <p className="text-sm text-red-700 mt-1">Injects 20 categories and 200 dummy products into the live database. Use with caution.</p>
-          </div>
-        </div>
-        <Button variant="danger" onClick={handleSeed} loading={seeding} className="shrink-0 w-full sm:w-auto">
-          Trigger Seed
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// ---------- User Management Section ----------
 
 function UserManagementSection() {
   const [users, setUsers] = useState([]);
@@ -308,15 +256,15 @@ function UserManagementSection() {
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Base Role</label>
-              <select 
+              <Dropdown 
                 value={editingUser.tempRole}
-                onChange={(e) => setEditingUser({...editingUser, tempRole: e.target.value})}
-                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-              >
-                <option value="customer">Customer / Standard User</option>
-                <option value="cashier">Cashier</option>
-                <option value="manager">Manager</option>
-              </select>
+                onChange={(val) => setEditingUser({...editingUser, tempRole: val})}
+                options={[
+                  { value: 'customer', label: 'Customer / Standard User' },
+                  { value: 'cashier', label: 'Cashier' },
+                  { value: 'manager', label: 'Manager' }
+                ]}
+              />
               <p className="text-xs text-slate-500 mt-1">Changing the base role resets default permissions.</p>
             </div>
 

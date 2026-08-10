@@ -50,6 +50,10 @@
 
   /* Robust printing styles */
   @media print {
+    body {
+      overflow: visible !important;
+      height: auto !important;
+    }
     body * {
       visibility: hidden;
     }
